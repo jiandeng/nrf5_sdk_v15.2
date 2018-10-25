@@ -59,6 +59,9 @@
 /*lint -save -e689 */ /* Apparent end of comment ignored */
 #include "arm_const_structs.h"
 /*lint -restore */
+#include "nrfx_gpiote.h"
+
+#define TIMING_OUTPUT_PIN                23
 
 #define GRAPH_WINDOW_HEIGHT              20                              //!< Graph window height used in draw function.
 
@@ -255,6 +258,9 @@ int main(void)
     NVIC_ClearPendingIRQ(FPU_IRQn);
     NVIC_EnableIRQ(FPU_IRQn);
 #endif
+    nrfx_gpiote_init();
+    nrfx_gpiote_out_config_t cfg = NRFX_GPIOTE_CONFIG_OUT_SIMPLE(false);
+    nrfx_gpiote_out_init(TIMING_OUTPUT_PIN, &cfg);
 
     // Enter main loop.
     for (;;)
@@ -277,10 +283,12 @@ int main(void)
         // For example:
         //  - 128 numbers in input array (64 complex pairs of samples) -> 64 output bins power data -> &arm_cfft_sR_f32_len64.
         //  - 256 numbers in input array (128 complex pairs of samples) -> 128 output bins power data -> &arm_cfft_sR_f32_len128.
+        nrfx_gpiote_out_set(TIMING_OUTPUT_PIN);
         fft_process(m_fft_input_f32,
                     &arm_cfft_sR_f32_len64,
                     m_fft_output_f32,
                     FFT_TEST_OUT_SAMPLES_LEN);
+        nrfx_gpiote_out_clear(TIMING_OUTPUT_PIN);
 
         // Draw FFT bin power chart.
         draw_fft_header(sine_freq, noise);
