@@ -292,7 +292,7 @@ int main(void)
 
         // Draw FFT bin power chart.
         draw_fft_header(sine_freq, noise);
-        draw_fft_data(m_fft_output_f32, FFT_TEST_OUT_SAMPLES_LEN, GRAPH_WINDOW_HEIGHT);
+        draw_fft_data(m_fft_output_f32, FFT_TEST_OUT_SAMPLES_LEN / 2, GRAPH_WINDOW_HEIGHT);
 
         NRF_LOG_FLUSH();
 
