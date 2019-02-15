@@ -83,6 +83,29 @@ static uint32_t  m_do_bit_reverse        = 1;                            //!< Fl
 static float32_t m_fft_input_f32[FFT_TEST_COMP_SAMPLES_LEN];             //!< FFT input array. Time domain.
 static float32_t m_fft_output_f32[FFT_TEST_OUT_SAMPLES_LEN];             //!< FFT output data. Frequency domain.
 
+// HP
+static float m_filter_buffer[FFT_TEST_OUT_SAMPLES_LEN];
+static float m_filter_state[8] = { 0 };
+static float m_filter_coeffs[] = {
+  0.77724652, -0.77724652, 0.0,        0.77567951, 0.0,
+  1.0,        -2.0,        1.0,        1.72292883, -0.77881353,
+};
+static arm_biquad_casd_df1_inst_f32 m_filter = {
+  2, m_filter_state, m_filter_coeffs
+};
+
+// BP
+// static float m_filter_buffer[FFT_TEST_OUT_SAMPLES_LEN];
+// static float m_filter_state[12] = { 0 };
+// static float m_filter_coeffs[] = {
+//   0.18281859, 0.36563719, 0.18281859, -0.39231156,-0.41697244,
+//   1.0,        0.0,       -1.0,         0.68163893, 0.03142627,
+//   1.0,       -2.0,        1.0,         1.74086455,-0.801518,
+// };
+// static arm_biquad_casd_df1_inst_f32 m_filter = {
+//   3, m_filter_state, m_filter_coeffs
+// };
+
 /**
  * @brief Function for generating sine wave samples for FFT calculations.
  *
@@ -123,7 +146,13 @@ static void fft_generate_samples(float32_t * p_input,
         }
         // Img part.
         p_input[(uint16_t)i + 1] = 0;
+        m_filter_buffer[i / 2] = p_input[i];
     }
+
+    nrfx_gpiote_out_set(TIMING_OUTPUT_PIN);
+    arm_biquad_cascade_df1_f32(&m_filter, m_filter_buffer, m_filter_buffer, size / 2);
+    nrfx_gpiote_out_clear(TIMING_OUTPUT_PIN);
+    nrf_delay_ms(1);
 }
 
 /**

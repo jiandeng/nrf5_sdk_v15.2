@@ -52,3 +52,38 @@
 | 512 | 20          | 0.05           | 6.15           | 1.0            |
 | 1024| 40          | 0.25           | 12.3           | 2.3            |
 | 2048| 80          | 0.125          | FAIL           | FAIL           |
+
+## 滤波器时间开销
+| N   | 3阶高通(us) | 3阶带通(us)    |
+|-----|:-----------:|:--------------:|
+| 64  | 36          | 52             |
+| 128 | 64          | 104            |
+| 256 | 136         | 204            |
+| 512 | 264         | 400            |
+| 1024| 528         | 800            |
+| 2048| FAIL        | FAIL           |
+
+* 3阶高通
+
+```
+    FILTER_FREQUENCY = 1
+    SAMPLE_RATE = 25
+    f = signal.butter(3, FILTER_FREQUENCY*2.0/SAMPLE_RATE, 'highpass', False, 'sos')
+    print(f) # 打印滤波器系数
+    w,h = signal.sosfreqz(f) # 绘制频率相应
+    pd.DataFrame({'w': w/np.pi*SAMPLE_RATE/2, 'h': 10*np.log(abs(h))}).set_index('w').iplot(kind='scatter',theme='pearl',rangeslider=True)
+    d = np.arange(0, 64) * 3.14159 / 1.29 # 滤波
+    signal.sosfilt(f, d).round(6)
+```
+* 3阶带通
+
+```
+    FILTER_FREQUENCY = np.array([1.0, 7.5])
+    SAMPLE_RATE = 25
+    f = signal.butter(3, FILTER_FREQUENCY*2.0/SAMPLE_RATE, 'bandpass', False, 'sos')
+    print(f) # 打印滤波系数
+    w,h = signal.sosfreqz(f) # 绘制频率响应
+    pd.DataFrame({'w': w/np.pi*SAMPLE_RATE/2, 'h': 10*np.log(abs(h))}).set_index('w').iplot(kind='scatter',theme='pearl',rangeslider=True)
+    d = np.arange(0, 64) * 3.14159 / 1.29 # 滤波
+    signal.lfilter(b, a, d).round(6)
+```
